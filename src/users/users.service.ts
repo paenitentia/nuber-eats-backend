@@ -6,12 +6,17 @@ import { CreateAccountInput } from './dtos/create-account.dto';
 import { LoginInput } from './dtos/login.dto';
 import { User } from './entities/user.entity';
 import { ConfigService } from '@nestjs/config';
+import { JwtService } from 'src/jwt/jwt.service';
+import { EditProfileInput } from './dtos/edit-profile.dto';
+import { Verification } from './entities/verification.entity';
 
 @Injectable()
 export class UsersService {
   constructor(
     @InjectRepository(User) private readonly users: Repository<User>,
-    private readonly config: ConfigService,
+    @InjectRepository(Verification)
+    private readonly verifications: Repository<Verification>,
+    private readonly jwtService: JwtService,
   ) {}
 
   async createAccount({
@@ -24,7 +29,14 @@ export class UsersService {
       if (exists) {
         return { ok: false, error: 'There is a user with that email already' };
       }
-      await this.users.save(this.users.create({ email, password, role }));
+      const user = await this.users.save(
+        this.users.create({ email, password, role }),
+      );
+      await this.verifications.save(
+        this.verifications.create({
+          user,
+        }),
+      );
       return { ok: true };
     } catch (e) {
       console.log(e);
@@ -53,7 +65,8 @@ export class UsersService {
         };
       }
 
-      const token = jwt.sign({ id: user.id }, this.config.get('SECRET_KEY'));
+      //const token = jwt.sign({ id: user.id }, this.config.get('PRIVATE_KEY'));
+      const token = this.jwtService.sign(user.id);
       return {
         ok: true,
         token,
@@ -64,5 +77,33 @@ export class UsersService {
         error,
       };
     }
+  }
+
+  async findById(id: number): Promise<User> {
+    return this.users.findOneBy({ id });
+  }
+
+  async editProfile(userId: number, { email, password }: EditProfileInput) {
+    const user = await this.users.findOneBy({ id: userId });
+    if (email) {
+      user.email = email;
+      user.verified = false;
+      await this.verifications.save(this.verifications.create({ user }));
+    }
+    if (password) {
+      user.password = password;
+    }
+
+    return await this.users.save(user);
+  }
+
+  async verifyEmail(code: string): Promise<boolean> {
+    const verification = await this.verifications.findOneBy({ code });
+
+    if (verification) {
+      verification.user.verified = true;
+      this.users.save(verification.user);
+    }
+    return false;
   }
 }
