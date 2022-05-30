@@ -14,15 +14,15 @@ export class MailService {
     //this.sendEmail('testing', 'test', 'jubace@kakao.com');
   }
 
-  private async sendEmail(
+  async sendEmail(
     subject: string,
     template: string,
     emailVars: EmailVar[],
-    to: string,
+    //to: string,
   ) {
     const form = new FormData();
     form.append('from', `Nuber Eats User <mailgun@${this.options.fromEmail}>`);
-    form.append('to', to);
+    //form.append('to', to);
     form.append('template', template);
     emailVars.forEach((eVar) => form.append(`v:${eVar.key}`, eVar.value));
     form.append('subject', subject);
@@ -50,7 +50,7 @@ export class MailService {
         { key: 'code', value: code },
         { key: 'username', value: email },
       ],
-      email,
+      //,email,
     );
   }
 }
