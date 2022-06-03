@@ -1,17 +1,18 @@
 import { Test } from '@nestjs/testing';
 import exp from 'constants';
 import { CONFIG_OPTIONS } from 'src/common/common.constants';
-
 import { MailService } from './mail.service';
 
 jest.mock('got', () => {
   console.log('gotgot');
 });
+
 jest.mock('form-data', () => {
   return {
     append: jest.fn(),
   };
 });
+
 describe('MailService', () => {
   let service: MailService;
 
