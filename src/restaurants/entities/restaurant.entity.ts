@@ -1,33 +1,32 @@
 import { Field, InputType, ObjectType } from '@nestjs/graphql';
 import { IsBoolean, IsOptional, IsString, Length } from 'class-validator';
 import { isNullableType } from 'graphql';
-import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import { CoreEntity } from 'src/common/entities/core.entity';
+import { User } from 'src/users/entities/user.entity';
+import {
+  Column,
+  Entity,
+  ManyToOne,
+  PrimaryGeneratedColumn,
+  RelationId,
+} from 'typeorm';
+import { Category } from './category.entity';
 
-@InputType({ isAbstract: true }) //이걸 넣으면 dto에서는 3번째 인자 InputType을 뺄수있다.
+@InputType('RestaurantInputType', { isAbstract: true }) //이걸 넣으면 dto에서는 3번째 인자 InputType을 뺄수있다.
 @ObjectType()
 @Entity()
-export class Restaurant {
-  @PrimaryGeneratedColumn()
-  @Field((type) => Number)
-  id: number;
-
+export class Restaurant extends CoreEntity {
   @Field((type) => String)
   @Column()
   @IsString()
   @Length(1, 255)
   name: string;
 
-  @Field((type) => Boolean, { nullable: true })
-  @Column({ nullable: true })
-  @IsBoolean()
-  @IsOptional()
-  isGood?: boolean;
-
-  @Field((type) => Boolean, { defaultValue: true }) // for graphql schema
-  @Column({ default: true }) // for database(typeorm)
-  @IsBoolean() // for validation
-  @IsOptional() // for validation
-  isVegan: boolean;
+  // @Field((type) => Boolean, { nullable: true })
+  // @Column({ nullable: true })
+  // @IsBoolean()
+  // @IsOptional()
+  // isGood?: boolean;
 
   @Field((type) => String)
   @Column()
@@ -36,9 +35,22 @@ export class Restaurant {
 
   @Field((type) => String)
   @Column()
-  ownerName: string;
+  @IsString()
+  coverImg: string;
 
-  //   @Field((type) => String)
-  //   @Column()
-  //   categoryName: string;
+  @Field((type) => Category, { nullable: true })
+  @ManyToOne((type) => Category, (category) => category.restaurants, {
+    nullable: true,
+    onDelete: 'SET NULL',
+  })
+  category: Category;
+
+  @Field((type) => User)
+  @ManyToOne((type) => User, (user) => user.restaurants, {
+    onDelete: 'CASCADE',
+  })
+  owner: User;
+
+  @RelationId((restaurant: Restaurant) => restaurant.owner)
+  ownerId: number;
 }
