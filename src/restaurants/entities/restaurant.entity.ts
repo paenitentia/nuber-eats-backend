@@ -7,10 +7,12 @@ import {
   Column,
   Entity,
   ManyToOne,
+  OneToMany,
   PrimaryGeneratedColumn,
   RelationId,
 } from 'typeorm';
 import { Category } from './category.entity';
+import { Dish } from './dish.entity';
 
 @InputType('RestaurantInputType', { isAbstract: true }) //이걸 넣으면 dto에서는 3번째 인자 InputType을 뺄수있다.
 @ObjectType()
@@ -21,12 +23,6 @@ export class Restaurant extends CoreEntity {
   @IsString()
   @Length(1, 255)
   name: string;
-
-  // @Field((type) => Boolean, { nullable: true })
-  // @Column({ nullable: true })
-  // @IsBoolean()
-  // @IsOptional()
-  // isGood?: boolean;
 
   @Field((type) => String)
   @Column()
@@ -53,4 +49,8 @@ export class Restaurant extends CoreEntity {
 
   @RelationId((restaurant: Restaurant) => restaurant.owner)
   ownerId: number;
+
+  @Field((type) => [Dish])
+  @OneToMany((type) => Dish, (dish) => dish.restaurant)
+  menu: Dish[];
 }
